@@ -449,19 +449,26 @@ class ServiceManagementService(_ServiceManagementClient):
                 extended_properties),
             async=True)
 
-    def delete_deployment(self, service_name, deployment_name):
+    def delete_deployment(self, service_name, deployment_name, delete_attached_disks=False):
         '''
         Deletes the specified deployment.
 
         service_name: Name of the hosted service.
         deployment_name: The name of the deployment.
+        delete_attached_disks: Optional. Specifies that the operating
+                                system disk, attached data disks, and 
+                                the source blobs for the disks should 
+                                also be deleted from storage.
         '''
         _validate_not_none('service_name', service_name)
         _validate_not_none('deployment_name', deployment_name)
-        return self._perform_delete(
-            self._get_deployment_path_using_name(
-                service_name, deployment_name),
-            async=True)
+
+        path = self._get_deployment_path_using_name(
+            service_name, deployment_name)
+
+        if delete_attached_disks:
+            path += '?comp=media'
+        return self._perform_delete(path,async=True)
 
     def swap_deployment(self, service_name, production, source_deployment):
         '''
@@ -1191,20 +1198,27 @@ class ServiceManagementService(_ServiceManagementClient):
                 role_size),
             async=True)
 
-    def delete_role(self, service_name, deployment_name, role_name):
+    def delete_role(self, service_name, deployment_name, role_name, delete_attached_disks=False):
         '''
         Deletes the specified virtual machine.
 
         service_name: The name of the service.
         deployment_name: The name of the deployment.
         role_name: The name of the role.
+        delete_attached_disks: Specifies that the operating system disk, 
+                               attached data disks, and the source blobs
+                                for the disks should also be deleted from storage.
         '''
         _validate_not_none('service_name', service_name)
         _validate_not_none('deployment_name', deployment_name)
         _validate_not_none('role_name', role_name)
-        return self._perform_delete(
-            self._get_role_path(service_name, deployment_name, role_name),
-            async=True)
+
+        path = self._get_role_path(service_name, deployment_name, role_name)
+
+        if delete_attached_disks:
+            path += '?comp=media'
+
+        return self._perform_delete(path, async=True)
 
     def capture_role(self, service_name, deployment_name, role_name,
                      post_capture_action, target_image_name,
